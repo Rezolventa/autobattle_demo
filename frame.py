@@ -1,6 +1,15 @@
-import pygame
-
 from rendering import get_scaled_image, center_coords_to_left_up, get_spot_coords
+
+
+class FrameSlot:
+    pos = None
+    unit = None
+    team = None
+
+    def __init__(self, pos, unit, team):
+        self.pos = pos
+        self.unit = unit
+        self.team = team
 
 
 class BattleFrame:
@@ -8,43 +17,59 @@ class BattleFrame:
     teamA = []  # команда игрока
     teamB = []  # команда ИИ
 
-    zombie_1 = get_scaled_image('sprites/zombie_1.png', 4)
-    zombie_1_attack = get_scaled_image('sprites/zombie_1_attack.png', 4)
+    sprites = {
+        'zombie_1': get_scaled_image('sprites/zombie_1.png', 4),
+        'zombie_1_attack': get_scaled_image('sprites/zombie_1_attack.png', 4),
+        'zombie_hit': get_scaled_image('sprites/zombie_hit.png', 4),
+        'player': get_scaled_image('sprites/player.png', 4),  # +0, +50, +50 color
+        'player_attack': get_scaled_image('sprites/player_attack.png', 4),
+        'player_hit': get_scaled_image('sprites/player_hit.png', 4)
+    }
 
     win = None
-    # filter = None
 
     def start(self):
-        for obj in self.teamA + self.teamB:
-            obj.set_target()
+        # распределяем таргеты
+        # for slot in self.teamA + self.teamB:
+        #     slot.obj.set_target()
+        for slot in self.teamA:
+            slot.unit.set_target_from(self.teamB)
+        for slot in self.teamB:
+            slot.unit.set_target_from(self.teamA)
 
     def render_all(self):
-        i = 0
         # отображаем только живых
-        for obj in self.teamA:
-            i += 1
-            if obj.hp > 0:
-                pygame.draw.circle(self.win, (255, 155, 0), get_spot_coords('A', i), 35)
-
-        i = 0
-        for obj in self.teamB:
-            i += 1
-            if obj.hp > 0:
-                # special_flags = pygame.BLEND_RGBA_SUB if obj.filter_countdown > 0 else None
-                if obj.animation_countdown > 0:
-                    coords = center_coords_to_left_up(get_spot_coords('B', i), self.zombie_1_attack)
-                    # self.filter.blit(self.zombie_1_attack, coords)
-                    # self.win.blit(self.filter, (0, 0))
-                    self.win.blit(self.zombie_1_attack, coords)
+        for slot in self.teamA:
+            unit = slot.unit
+            if unit.hp > 0:
+                if unit.filter_countdown > 0:
+                    the_sprite = self.sprites.get('player_hit')
+                elif unit.animation_countdown > 0:
+                    the_sprite = self.sprites.get('player_attack')
                 else:
-                    coords = center_coords_to_left_up(get_spot_coords('B', i), self.zombie_1)
-                    self.win.blit(self.zombie_1, coords)
+                    the_sprite = self.sprites.get('player')
+
+                coords = center_coords_to_left_up(get_spot_coords('A', slot.pos), the_sprite)
+                self.win.blit(the_sprite, coords)
+
+        for slot in self.teamB:
+            unit = slot.unit
+            if unit.hp > 0:
+                if unit.filter_countdown > 0:
+                    the_sprite = self.sprites.get('zombie_hit')
+                elif unit.animation_countdown > 0:
+                    the_sprite = self.sprites.get('zombie_1_attack')
+                else:
+                    the_sprite = self.sprites.get('zombie_1')
+
+                coords = center_coords_to_left_up(get_spot_coords('B', slot.pos), the_sprite)
+                self.win.blit(the_sprite, coords)
 
     def add_unit(self, team, unit):
         if team == 'A':
-            self.teamA.append(unit)
+            self.teamA.append(FrameSlot(len(self.teamA) + 1, unit, self.teamA))
         elif team == 'B':
-            self.teamB.append(unit)
+            self.teamB.append(FrameSlot(len(self.teamB) + 1, unit, self.teamB))
         unit.frame = self
 
     def handle_tick(self):
@@ -52,33 +77,41 @@ class BattleFrame:
         self.handle_team(self.teamB, self.teamA)
 
     def handle_team(self, creature_list_1, creature_list_2):
-        for obj in creature_list_1:
-            if obj.attack_cooldown == 0:
+        for slot in creature_list_1:
+            unit = slot.unit
+            if unit.attack_cooldown == 0:
                 # кулдаун атаки закончился, накручиваем
-                obj.set_attack_cooldown()
+                unit.set_attack_cooldown()
                 # меняем статус для анимации
-                obj.set_animation_countdown()
+                unit.set_animation_countdown()
+                # unit.set_animation(action='attack')
                 # если предыдущая цель есть и жива, продолжаем ее атаковать
-                if obj.target:
+                if unit.target:
                     # снимаем у цели хп
-                    obj.target.hp -= obj.attack
-                    print(obj.name, 'attacks', obj.target.name, 'for', obj.attack, '({} left)'.format(obj.target.hp))
+                    unit.target.hp -= unit.attack
+                    print(unit.name, 'attacks', unit.target.name, 'for', unit.attack, '({} left)'.format(unit.target.hp))
 
-                    # включаем фильтр попадания
-                    # obj.target.set_filter_countdown()
-
-                    # обрабатываем последствия
-                    if not obj.target.hp > 0:
-                        print(obj.name, 'dies!')
-                        creature_list_2.remove(obj.target)
-                        obj.set_target()
+                    if unit.target.hp > 0:
+                        # включаем фильтр попадания
+                        unit.target.set_filter_countdown()
+                    else:
+                        # обрабатываем смерть юнита
+                        print(unit.target.name, 'dies!')
+                        # creature_list_2.remove(unit.target)
+                        for slot in creature_list_2:
+                            if slot.unit == unit.target:
+                                creature_list_2.remove(slot)
+                        # unit.set_target()
+                        unit.set_target_from(creature_list_2)
 
                 # иначе выбираем новую
                 else:
-                    obj.set_target()
+                    unit.set_target()
 
             else:
-                # снимаем тик
-                obj.attack_cooldown -= 1
+                # снимаем тик атаки
+                unit.attack_cooldown -= 1
 
-            obj.animation_countdown -= 1
+            # уменьшаем тики "анимаций"
+            unit.animation_countdown -= 1
+            unit.filter_countdown -= 1

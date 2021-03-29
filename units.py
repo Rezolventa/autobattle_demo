@@ -15,7 +15,7 @@ class Unit:
     target = None
     frame = None
     animation_countdown = 0
-    # filter_countdown = 0
+    filter_countdown = 0
 
     def __init__(self, name, hp, attack , attack_delay, hit_chance, crit_chance):
         self.name = name
@@ -33,19 +33,26 @@ class Unit:
         # выбрать рандомную цель из другой команды
         if self in self.frame.teamA:
             if len(self.frame.teamB):
-                self.target = self.frame.teamB[randint(0, len(self.frame.teamB) - 1)]
+                self.target = self.frame.teamB[randint(0, len(self.frame.teamB) - 1)].unit
                 print(self.name, 'targets', self.target.name)
             else:
                 self.target = None
         else:
             if len(self.frame.teamA):
-                self.target  = self.frame.teamA[randint(0, len(self.frame.teamA) - 1)]
+                self.target  = self.frame.teamA[randint(0, len(self.frame.teamA) - 1)].unit
                 print(self.name, 'targets', self.target.name)
             else:
                 self.target = None
 
-    def set_animation_countdown(self):
-        self.animation_countdown = FRAME_RATE * 0.75
+    def set_target_from(self, team):
+        if len(team):
+            self.target = team[randint(0, len(team) - 1)].unit
+            print(self.name, 'targets', self.target.name)
+        else:
+            self.target = None
 
-    # def set_filter_countdown(self):
-    #     self.filter_countdown = FRAME_RATE * 0.5
+    def set_animation_countdown(self):
+        self.animation_countdown = FRAME_RATE * 0.5
+
+    def set_filter_countdown(self):
+        self.filter_countdown = FRAME_RATE * 0.3
