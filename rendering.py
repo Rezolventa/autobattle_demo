@@ -2,6 +2,10 @@ import pygame
 
 from const import WIN_WIDTH, WIN_HEIGHT
 
+pygame.font.init()
+default_font = pygame.font.SysFont('serif', 30)
+default_color = pygame.Color(255, 0, 0)
+
 
 def get_scaled_image(image, k):
     loaded = pygame.image.load(image)

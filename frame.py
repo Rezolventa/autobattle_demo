@@ -1,21 +1,48 @@
-from rendering import get_scaled_image, center_coords_to_left_up, get_spot_coords
+
+from rendering import get_scaled_image, center_coords_to_left_up, get_spot_coords, default_font, default_color
+
+import pygame
 
 
-class FrameSlot:
-    pos = None
-    unit = None
-    team = None
+class UnitSlot(pygame.sprite.Sprite):
 
     def __init__(self, pos, unit, team):
+        super().__init__()
         self.pos = pos
         self.unit = unit
         self.team = team
 
+    def update(self):
+        if self.unit.filter_countdown > 0:
+            self.image = self.unit.image_hit
+        elif self.unit.animation_countdown > 0:
+            self.image = self.unit.image_attack
+        else:
+            self.image = self.unit.image_idle
+
+
+class Textbox(pygame.sprite.Sprite):
+
+    font = default_font
+    color = default_color
+
+    def __init__(self, slot, text):
+        super().__init__()
+        self.text = text
+        self.image = self.font.render(text, False, (0, 255, 0))
+        self.rect = self.image.get_rect()
+        self.pos_x = 250
+        self.pos_y = 250
+
+    def update(self):
+        # центр надписи - крайняя верхняя точка спрайта юнита
+        self.rect.center = [self.pos_x, self.pos_y]
+
 
 class BattleFrame:
     """Сущность-окно, внутри которого отрисовывается автобой"""
-    teamA = []  # команда игрока
-    teamB = []  # команда ИИ
+    teamA = []  # юниты команды игрока
+    teamB = []  # юниты команды ИИ
 
     sprites = {
         'zombie_1': get_scaled_image('sprites/zombie_1.png', 4),
@@ -25,6 +52,11 @@ class BattleFrame:
         'player_attack': get_scaled_image('sprites/player_attack.png', 4),
         'player_hit': get_scaled_image('sprites/player_hit.png', 4)
     }
+
+    unit_sprites = pygame.sprite.Group()
+
+    text_boxes = pygame.sprite.Group()
+    text_boxes.add(Textbox(None, 'Hello!'))
 
     win = None
 
@@ -65,11 +97,18 @@ class BattleFrame:
                 coords = center_coords_to_left_up(get_spot_coords('B', slot.pos), the_sprite)
                 self.win.blit(the_sprite, coords)
 
+        # for text_box in self.text_boxes:
+        #     self.win.blit(text_box.render, (text_box.pos_x, text_box.pos_y))
+
+        self.text_boxes.update()
+        self.text_boxes.draw(self.win)
+
     def add_unit(self, team, unit):
         if team == 'A':
-            self.teamA.append(FrameSlot(len(self.teamA) + 1, unit, self.teamA))
+            self.teamA.append(UnitSlot(len(self.teamA) + 1, unit, self.teamA))
+            self.frames
         elif team == 'B':
-            self.teamB.append(FrameSlot(len(self.teamB) + 1, unit, self.teamB))
+            self.teamB.append(UnitSlot(len(self.teamB) + 1, unit, self.teamB))
         unit.frame = self
 
     def handle_tick(self):
@@ -87,7 +126,7 @@ class BattleFrame:
                 # unit.set_animation(action='attack')
                 # если предыдущая цель есть и жива, продолжаем ее атаковать
                 if unit.target:
-                    # снимаем у цели хп
+                    # наносим урон
                     unit.target.hp -= unit.attack
                     print(unit.name, 'attacks', unit.target.name, 'for', unit.attack, '({} left)'.format(unit.target.hp))
 

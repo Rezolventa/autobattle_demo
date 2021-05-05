@@ -1,23 +1,17 @@
 from random import randint
 
 from const import FRAME_RATE
+from rendering import get_scaled_image
 
 
 class Unit:
-    name = None
-    hp = None
-    attack = None
-    attack_delay = None
-    hit_chance = None
-    crit_chance = None
-
     attack_cooldown = None
     target = None
     frame = None
     animation_countdown = 0
     filter_countdown = 0
 
-    def __init__(self, name, hp, attack , attack_delay, hit_chance, crit_chance):
+    def __init__(self, name, unit_type, hp, attack, attack_delay, hit_chance, crit_chance):
         self.name = name
         self.hp = hp
         self.attack = attack
@@ -25,6 +19,12 @@ class Unit:
         self.hit_chance = hit_chance
         self.crit_chance = crit_chance
         self.set_attack_cooldown()
+        self.set_images(unit_type)
+
+    def set_images(self, unit_type):
+        self.image_idle = get_scaled_image('sprites/{}.png'.format(unit_type), 4)
+        self.image_attack = get_scaled_image('sprites/{}_attack.png', 4)
+        self.image_hit = get_scaled_image('sprites/{}_hit.png', 4)
 
     def set_attack_cooldown(self):
         self.attack_cooldown = round(FRAME_RATE * self.attack_delay)
