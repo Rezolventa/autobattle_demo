@@ -11,22 +11,29 @@ class Unit:
     animation_countdown = 0
     filter_countdown = 0
 
-    def __init__(self, name, unit_type, hp, attack, attack_delay, hit_chance, crit_chance):
+    def __init__(
+        self,
+        name, unit_type, tier,  # классификация
+        hp, attack, attack_delay, hit_chance, crit_chance  # боевые статы
+    ):
         self.name = name
+        self.unit_type = unit_type
+        self.tier = tier
         self.hp = hp
         self.attack = attack
         self.attack_delay = attack_delay
         self.hit_chance = hit_chance
         self.crit_chance = crit_chance
         self.set_attack_cooldown()
-        self.set_images(unit_type)
 
-    def set_images(self, unit_type):
-        self.image_idle = get_scaled_image('sprites/{}.png'.format(unit_type), 4)
-        self.image_attack = get_scaled_image('sprites/{}_attack.png', 4)
-        self.image_hit = get_scaled_image('sprites/{}_hit.png', 4)
+        # спрайты
+        self.image_idle = get_scaled_image('sprites/{}_{}.png'.format(self.unit_type, self.tier), 4)
+        self.image_attack = get_scaled_image('sprites/{}_{}_attack.png'.format(self.unit_type, self.tier), 4)
+        self.image_hit = get_scaled_image('sprites/{}_hit.png'.format(self.unit_type), 4)
 
     def set_attack_cooldown(self):
+        """Накручивает кулдаун атаки (в фреймах)"""
+        # TODO: reset_attack_cooldown больше подходит?
         self.attack_cooldown = round(FRAME_RATE * self.attack_delay)
 
     def set_target(self):
@@ -39,7 +46,7 @@ class Unit:
                 self.target = None
         else:
             if len(self.frame.teamA):
-                self.target  = self.frame.teamA[randint(0, len(self.frame.teamA) - 1)].unit
+                self.target = self.frame.teamA[randint(0, len(self.frame.teamA) - 1)].unit
                 print(self.name, 'targets', self.target.name)
             else:
                 self.target = None

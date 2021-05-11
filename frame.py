@@ -1,10 +1,12 @@
-
 from rendering import get_scaled_image, center_coords_to_left_up, get_spot_coords, default_font, default_color
 
 import pygame
 
 
 class UnitSlot(pygame.sprite.Sprite):
+    """
+    Слот для юнита во фрейме. Хранит позицию, тип юнита и текущий спрайт для отрисовки.
+    """
 
     def __init__(self, pos, unit, team):
         super().__init__()
@@ -48,8 +50,8 @@ class BattleFrame:
         'zombie_1': get_scaled_image('sprites/zombie_1.png', 4),
         'zombie_1_attack': get_scaled_image('sprites/zombie_1_attack.png', 4),
         'zombie_hit': get_scaled_image('sprites/zombie_hit.png', 4),
-        'player': get_scaled_image('sprites/player.png', 4),  # +0, +50, +50 color
-        'player_attack': get_scaled_image('sprites/player_attack.png', 4),
+        'player': get_scaled_image('sprites/player_0.png', 4),  # +0, +50, +50 color
+        'player_attack': get_scaled_image('sprites/player_0_attack.png', 4),
         'player_hit': get_scaled_image('sprites/player_hit.png', 4)
     }
 
@@ -70,10 +72,13 @@ class BattleFrame:
             slot.unit.set_target_from(self.teamA)
 
     def render_all(self):
-        # отображаем только живых
+        # отображаем только живых - исправить на цикл с условием
         for slot in self.teamA:
             unit = slot.unit
             if unit.hp > 0:
+
+                # какой-то говнокусок - нужно переделывать под отображение ТЕКУЩЕГО спрайта слота
+                # slot.draw() ?
                 if unit.filter_countdown > 0:
                     the_sprite = self.sprites.get('player_hit')
                 elif unit.animation_countdown > 0:
@@ -106,7 +111,7 @@ class BattleFrame:
     def add_unit(self, team, unit):
         if team == 'A':
             self.teamA.append(UnitSlot(len(self.teamA) + 1, unit, self.teamA))
-            self.frames
+            # self.frames
         elif team == 'B':
             self.teamB.append(UnitSlot(len(self.teamB) + 1, unit, self.teamB))
         unit.frame = self
