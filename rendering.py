@@ -3,7 +3,7 @@ import pygame
 from const import WIN_WIDTH, WIN_HEIGHT
 
 pygame.font.init()
-default_font = pygame.font.SysFont('serif', 30)
+default_font = pygame.font.SysFont("serif", 30)
 default_color = pygame.Color(255, 0, 0)
 
 
@@ -25,7 +25,7 @@ def get_spot_coords(team, number):
     Возвращает координаты центров позиций спрайтов.
     Первый спрайт посередине, второй сверху, третий снизу.
     """
-    sign_x = -1 if team == 'A' else 1
+    sign_x = -1 if team == "A" else 1
     x = WIN_WIDTH // 2 + sign_x * 150
 
     sign_y = {1: 0, 2: -1, 3: 1}.get(number)
