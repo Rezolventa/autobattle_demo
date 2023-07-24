@@ -1,10 +1,4 @@
-from rendering import (
-    get_scaled_image,
-    center_coords_to_left_up,
-    get_spot_coords,
-    default_font,
-    default_color,
-)
+from rendering import get_scaled_image, center_coords_to_left_up, get_spot_coords, default_font, default_color
 
 import pygame
 
@@ -19,6 +13,7 @@ class UnitSlot(pygame.sprite.Sprite):
         self.pos = pos
         self.unit = unit
         self.team = team
+        self.image = None
 
     def update(self):
         if self.unit.filter_countdown > 0:
