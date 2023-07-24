@@ -21,7 +21,7 @@ Start battle by executing:
 python main.py
 ```
 # What it looks like
-
+![](demo.jpg)
 # TODO
 + Damage numbers highlights
-+ End screen when either side "dies"
++ End screen when either side wins
